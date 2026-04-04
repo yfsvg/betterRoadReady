@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <link rel="stylesheet" href="login.css">
+    <link rel="stylesheet" href="main.css">
+</head>
+<body>
+
+<div id="signInSegment" style="display: flex; flex-direction: column;" class="lgnSegment">
+    <p>Welcome back! Sign in</p>
+    <input id="signInEmail" type="email" placeholder="Email">
+    <br>
+    <input id="signInPassword" type="password" placeholder="Password">
+    <br>
+    <button id="signInBtn">Sign In</button>
+</div>
+
+<div id="signUpSegment" style="display: none; flex-direction: column;" class="lgnSegment">
+    <p>Sign Up</p>
+    <input id="signUpEmail" type="email" placeholder="Email">
+    <br>
+    <input id="signUpPassword" type="password" placeholder="Password (min 6)">
+    <br>
+    <input id="signUpDob" type="date">
+    <br>
+    <input id="signUpName" type="text" placeholder="Full Name">
+    <br>
+    <input id="signUpState" type="text" placeholder="State">
+    <br>
+    <button id="signUpBtn">Sign Up</button>
+</div>
+
+
+<p onclick="toggleSignType()" id="toggleText" style="margin-top: 30px;">I don't have an account</p>
+<script>
+    function toggleSignType() {
+        const signIn = document.getElementById("signInSegment");
+        const signUp = document.getElementById("signUpSegment");
+        const toggleText = document.getElementById("toggleText");
+
+        if (signIn.style.display === "none") {
+            signIn.style.display = "flex";
+            signUp.style.display = "none";
+            toggleText.textContent = "I don't have an account";
+        } else {
+            signIn.style.display = "none";
+            signUp.style.display = "flex";
+            toggleText.textContent = "Sign in";
+        }
+
+    }
+</script>
+
+<script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-analytics.js";
+    import { getFirestore, setDoc, doc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+
+
+    // Firebase config
+    const firebaseConfig = {
+        apiKey: "AIzaSyCHKhqm63ERxABXRC4prKo5y3l3AVsY2nE",
+        authDomain: "mocigan-rready.firebaseapp.com",
+        projectId: "mocigan-rready",
+        storageBucket: "mocigan-rready.firebasestorage.app",
+        messagingSenderId: "490613256817",
+        appId: "1:490613256817:web:10b8ee8ad0cf49ea0861d0",
+        measurementId: "G-LG7JZ0NGHD"
+    };
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            console.log("User signed in:", user);
+        } else {
+            console.log("No user signed in");
+        }
+    });
+
+
+    document.getElementById("signInBtn").addEventListener("click", async () => {
+        const email = document.getElementById("signInEmail").value;
+        const password = document.getElementById("signInPassword").value;
+
+        try {
+            const cred = await signInWithEmailAndPassword(auth, email, password);
+            console.log("Signed in:", cred.user);
+            alert("Signed in successfully");
+            window.location = "/menuPage.html"
+        } catch (error) {
+            console.error(error);
+            alert(error.message);
+        }
+        
+    });
+
+    document.getElementById("signUpBtn").addEventListener("click", async () => {
+        const email = document.getElementById("signUpEmail").value;
+        const password = document.getElementById("signUpPassword").value;
+
+        try {
+            const cred = await createUserWithEmailAndPassword(auth, email, password);
+            const name = document.getElementById("signUpName").value;
+            const state = document.getElementById("signUpState").value;
+
+        // All of this stuff is new for the user because they just signed up
+
+        await setDoc(doc(db, "users", cred.user.uid), {
+            email: email,
+            name: name,
+            state: state,
+
+            // Format of [{firstName: kid1FirstName, lastName: kid1LastName, age: kid1Age}, ...] 
+            kidsIndexInfo: [],
+            // Format of [{daytimeHours: kid1DaytimeHours, nighttimeHours: kid1NighttimeHours}, ...] 
+            kidsDriveTimeLogged: [],
+            // More info, empty for now
+            drivingLogs: [],
+            createdAt: new Date()
+
+        });
+        console.log("Signed up:", cred.user);
+            alert("Account created!! Sign in with that info");
+        } catch (error) {
+            console.error(error);
+            alert(error.message);
+        }
+    });
+
+</script>   
+
+</body>
+</html>
+

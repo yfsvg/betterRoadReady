@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Starting logging</title>
+
+    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="countingTimePage.css">
+</head>
+<body>
+
+    <p>Currently tracking for:</p>
+    <h1 id="whoWeTrackinFor">Name!!</h1>
+
+    <script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        const kidName = localStorage.getItem("selectedKidName");
+        document.getElementById("whoWeTrackinFor").textContent = kidName;
+    </script>
+
+</body>
+</html>
+

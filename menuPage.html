@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="menuPage.css">
+    <link rel="stylesheet" href="main.css">
+</head>
+<body>
+    <h1 id=
+    "welcomeMessage">Welcome back, </h1>
+    <p id="stateMessage">Your state is </p>
+    <select name="" id="kidSelection">
+        <option value="" disabled>None selected</option>
+    </select>
+
+    <button onclick="newKid()">Create a new kid profile</button>
+    <div id="newKidInputPlace" style="display: none; flex-direction: column; gap: 5px;">
+        <input type="text" placeholder="Kid first name" id="nkipF">
+        <input type="text" placeholder="Kid last name" id="nkipL">
+        <input type="number" placeholder="Kid age" id="nkipD">
+        <button onclick="createdNewKid()">Confirm new kid creation</button>
+    </div>
+
+    <button onclick="deleteAccount()">Delete account</button>
+    <button onclick="startDriving()" id="startDrivingButton">Start driving session (No kids tho can't do it)</button>
+
+    <script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCHKhqm63ERxABXRC4prKo5y3l3AVsY2nE",
+            authDomain: "mocigan-rready.firebaseapp.com",
+            projectId: "mocigan-rready",
+            storageBucket: "mocigan-rready.firebasestorage.app",
+            messagingSenderId: "490613256817",
+            appId: "1:490613256817:web:10b8ee8ad0cf49ea0861d0",
+            measurementId: "G-LG7JZ0NGHD"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        let userData = null;
+
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                try {
+                    const userDocRef = db.collection("users").doc(user.uid);
+                    const userDoc = await userDocRef.get();
+
+                    if (userDoc.exists) {
+                        userData = userDoc.data();
+                        document.getElementById("welcomeMessage").textContent = `Welcome back, ${userData.name}`;
+                        document.getElementById("stateMessage").textContent = `You live in ${userData.state}`;
+
+                        // 
+                        if (userData.kidsIndexInfo && userData.kidsIndexInfo.length > 0) {
+                            for (let i = 0; i < userData.kidsIndexInfo.length; i++) {
+                                const kidName = `${userData.kidsIndexInfo[i].firstName} ${userData.kidsIndexInfo[i].lastName}`;
+                                document.getElementById("kidSelection").innerHTML += `<option value="${i}">${kidName}</option>`;
+                            }
+
+                            document.getElementById("startDrivingButton").textContent = "Start logging!"
+                        }
+
+                        
+                    } else {
+                        console.log("User dont exist!");
+                    }
+                } catch (error) {
+                    console.error("Error fetching user data:", error);
+                }
+            } else {
+                window.location = "/login.html";
+                alert("YOU ARE NOT SIGNED IN!!!");
+            }
+        });
+
+        // Delete account function
+        async function deleteAccount() {
+            const user = auth.currentUser;
+            if (!user) {
+                alert("No user is currently signed in");
+                return;
+            }
+            // todo later add warning
+            // demolish EVERYTHING!!
+            await db.collection("users").doc(user.uid).delete();
+            await user.delete();
+            alert("Your account has been deleted.");
+            window.location = "/login.html";
+        }
+
+
+        // todo make ts work
+        function startDriving() {
+            const kidDrivingWith = document.getElementById("kidSelection").value;
+            sessionStorage.setItem("selectedKid", kidDrivingWith);
+            window.location = "/countingTimePage.html";
+        }
+
+        function newKid() {
+            document.getElementById("newKidInputPlace").style.display = "flex";
+        }
+        async function createdNewKid() {
+            if (!userData) {
+                alert("User data not loaded yet. Please wait.");
+                return;
+            }
+
+            const firstName = document.getElementById("nkipF").value.trim();
+            const lastName = document.getElementById("nkipL").value.trim();
+            const age = document.getElementById("nkipD").value.trim();
+
+            if (!firstName || !lastName || !age) {
+                alert("You're missing some fields");
+                return;
+            }
+
+            if (isNaN(age) || age < 0 || age > 120) {
+                alert("Please enter a valid age");
+                return;
+            }
+
+            try {
+                userData.kidsIndexInfo.push({firstName, lastName, age: parseInt(age)});
+                userData.kidsDriveTimeLogged.push({daytimeHours: 0, nighttimeHours: 0});
+
+                const user = auth.currentUser;
+
+                await db.collection("users").doc(user.uid).update({
+                    kidsIndexInfo: userData.kidsIndexInfo,
+                    kidsDriveTimeLogged: userData.kidsDriveTimeLogged
+                });
+
+                const newIndex = userData.kidsIndexInfo.length - 1;
+                const kidName = `${firstName} ${lastName}`;
+                document.getElementById("kidSelection").innerHTML += `<option value="${newIndex}">${kidName}</option>`;
+
+                document.getElementById("nkipF").value = "";
+                document.getElementById("nkipL").value = "";
+                document.getElementById("nkipD").value = "";
+                document.getElementById("newKidInputPlace").style.display = "none";
+
+                alert("New kid profile created successfully!");
+            } catch (error) {
+                console.error("Error creating new kid profile:", error);
+                alert("Error creating new kid profile: " + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

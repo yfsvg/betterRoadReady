@@ -1,0 +1,24 @@
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+
+    padding: 50px;
+    box-sizing: border-box;
+}
+
+input[type = "text"] {
+    width: 100%;
+}
+
+.lgnSegment {
+    width: 100%;
+    text-align: center;
+}
+
+.lgnSegment * {
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
