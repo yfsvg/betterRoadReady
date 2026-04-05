@@ -6,25 +6,51 @@
     <title>Document</title>
     <link rel="stylesheet" href="menuPage.css">
     <link rel="stylesheet" href="main.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
 </head>
 <body>
-    <h1 id=
-    "welcomeMessage">Welcome back, </h1>
-    <p id="stateMessage">Your state is </p>
-    <select name="" id="kidSelection">
-        <option value="" disabled>None selected</option>
-    </select>
+    <section id="mainBody">
+        <h1 id="welcomeMessage">Welcome back, </h1>
+        <p id="stateMessage">Your state is </p>
 
-    <button onclick="newKid()">Create a new kid profile</button>
-    <div id="newKidInputPlace" style="display: none; flex-direction: column; gap: 5px;">
-        <input type="text" placeholder="Kid first name" id="nkipF">
-        <input type="text" placeholder="Kid last name" id="nkipL">
-        <input type="number" placeholder="Kid age" id="nkipD">
-        <button onclick="createdNewKid()">Confirm new kid creation</button>
+        <p id="currentDriveTimeDaylight">You currently have this many seconds of drive time in daytime: </p>
+        <p id="currentDriveTimeNighttime">You currently have this many seconds of drive time in nighttime: </p>
+
+        <select name="" id="kidSelection">
+            <!-- Populated later -->
+        </select>
+
+        <button onclick="newKid()">Create a new kid profile</button>
+        <div id="newKidInputPlace" style="display: none; flex-direction: column; gap: 5px;">
+            <input type="text" placeholder="Kid first name" id="nkipF">
+            <input type="text" placeholder="Kid last name" id="nkipL">
+            <input type="number" placeholder="Kid age" id="nkipD">
+            <button onclick="createdNewKid()">Confirm new kid creation</button>
+        </div>
+
+        <button onclick="deleteAccount()">Delete account</button>
+        <button onclick="startDriving()" id="startDrivingButton">Start driving session (No kids tho can't do it)</button>
+
+        <button onclick="logOut()">Log Out</button>
+    </section>
+
+
+    <div id="bottomBar">
+        <!--Ideas for what to include in here: Changing kids, switching between: 1. previous logs 2. creating a new log 3. Account management-->
+        <div id="bottomBarMainSection">
+            <div id="bottomBarID">
+
+            </div>
+        </div>
+
+        <div id="accountChanger">
+            <div id="accountChangerImage"></div>
+        </div>
+
     </div>
-
-    <button onclick="deleteAccount()">Delete account</button>
-    <button onclick="startDriving()" id="startDrivingButton">Start driving session (No kids tho can't do it)</button>
 
     <script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-auth-compat.js"></script>
@@ -41,13 +67,14 @@
             appId: "1:490613256817:web:10b8ee8ad0cf49ea0861d0",
             measurementId: "G-LG7JZ0NGHD"
         };
-        
+
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        let userData = null;
 
+        let userData = null;
+        // page setup
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 try {
@@ -56,19 +83,23 @@
 
                     if (userDoc.exists) {
                         userData = userDoc.data();
-                        document.getElementById("welcomeMessage").textContent = `Welcome back, ${userData.name}`;
-                        document.getElementById("stateMessage").textContent = `You live in ${userData.state}`;
+                        console.log("User data loaded:", userData);
+                        const displayName = userData.name || user.displayName || "driver";
+                        document.getElementById("welcomeMessage").textContent = `Welcome back, ${displayName}`;
+                        document.getElementById("stateMessage").textContent = `You live in ${userData.state || "your state"}`;
 
-                        // 
+                        
                         if (userData.kidsIndexInfo && userData.kidsIndexInfo.length > 0) {
                             for (let i = 0; i < userData.kidsIndexInfo.length; i++) {
                                 const kidName = `${userData.kidsIndexInfo[i].firstName} ${userData.kidsIndexInfo[i].lastName}`;
                                 document.getElementById("kidSelection").innerHTML += `<option value="${i}">${kidName}</option>`;
                             }
+                
 
                             document.getElementById("startDrivingButton").textContent = "Start logging!"
+                            document.getElementById("kidSelection").addEventListener("change", updateDriveTimeDisplay);
+                            updateDriveTimeDisplay();
                         }
-
                         
                     } else {
                         console.log("User dont exist!");
@@ -80,10 +111,13 @@
                 window.location = "/login.html";
                 alert("YOU ARE NOT SIGNED IN!!!");
             }
+
         });
+        // End of config
 
         // Delete account function
         async function deleteAccount() {
+            // Sensitive here so add some stuff
             const user = auth.currentUser;
             if (!user) {
                 alert("No user is currently signed in");
@@ -101,8 +135,30 @@
         // todo make ts work
         function startDriving() {
             const kidDrivingWith = document.getElementById("kidSelection").value;
-            sessionStorage.setItem("selectedKid", kidDrivingWith);
+            sessionStorage.setItem("selectedKidName", `${userData.kidsIndexInfo[kidDrivingWith].firstName} ${userData.kidsIndexInfo[kidDrivingWith].lastName}`);
+            sessionStorage.setItem("selectedKidID", `${kidDrivingWith}`);
+
+
             window.location = "/countingTimePage.html";
+        }
+
+
+        function updateDriveTimeDisplay() {
+            const kidIndex = document.getElementById("kidSelection").value;
+            if (kidIndex !== null && kidIndex !== "") {
+                const daytimeSeconds = userData.kidsDriveTimeLogged[kidIndex].daytimeHours || 0;
+                const nighttimeSeconds = userData.kidsDriveTimeLogged[kidIndex].nighttimeHours || 0;
+                document.getElementById("currentDriveTimeDaylight").textContent = `You currently have this many seconds of daytime drive time: ${daytimeSeconds}`;
+                document.getElementById("currentDriveTimeNighttime").textContent = `You currently have this many seconds of nighttime drive time: ${nighttimeSeconds}`;
+            }
+        }
+
+        function logOut() {
+            auth.signOut().then(() => {
+                window.location = "/login.html";
+            }).catch((error) => {
+                console.error("Error signing out:", error);
+            });
         }
 
         function newKid() {
@@ -119,8 +175,8 @@
             const age = document.getElementById("nkipD").value.trim();
 
             if (!firstName || !lastName || !age) {
-                alert("You're missing some fields");
-                return;
+                alert("You're missing some fields")
+                return
             }
 
             if (isNaN(age) || age < 0 || age > 120) {
@@ -129,6 +185,7 @@
             }
 
             try {
+
                 userData.kidsIndexInfo.push({firstName, lastName, age: parseInt(age)});
                 userData.kidsDriveTimeLogged.push({daytimeHours: 0, nighttimeHours: 0});
 
@@ -143,16 +200,18 @@
                 const kidName = `${firstName} ${lastName}`;
                 document.getElementById("kidSelection").innerHTML += `<option value="${newIndex}">${kidName}</option>`;
 
-                document.getElementById("nkipF").value = "";
-                document.getElementById("nkipL").value = "";
-                document.getElementById("nkipD").value = "";
-                document.getElementById("newKidInputPlace").style.display = "none";
+                document.getElementById("nkipF").value = ""
+                document.getElementById("nkipL").value = ""
+                document.getElementById("nkipD").value = ""
+                document.getElementById("newKidInputPlace").style.display = "none"
+                updateDriveTimeDisplay();
 
                 alert("New kid profile created successfully!");
             } catch (error) {
-                console.error("Error creating new kid profile:", error);
-                alert("Error creating new kid profile: " + error.message);
+                console.error("Error creating new kid profile:", error)
+                alert("Error creating new kid profile: " + error.message)
             }
+            
         }
     </script>
 </body>

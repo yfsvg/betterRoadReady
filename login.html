@@ -7,6 +7,11 @@
 
     <link rel="stylesheet" href="login.css">
     <link rel="stylesheet" href="main.css">
+
+    <!-- Outfit Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
 </head>
 <body>
 
@@ -27,11 +32,13 @@
     <br>
     <input id="signUpDob" type="date">
     <br>
+
     <input id="signUpName" type="text" placeholder="Full Name">
     <br>
     <input id="signUpState" type="text" placeholder="State">
     <br>
     <button id="signUpBtn">Sign Up</button>
+
 </div>
 
 
@@ -56,14 +63,12 @@
 </script>
 
 <script type="module">
-    // Import the functions you need from the SDKs you need
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-analytics.js";
     import { getFirestore, setDoc, doc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
-
-    // Firebase config
+    // firebase confgis
     const firebaseConfig = {
         apiKey: "AIzaSyCHKhqm63ERxABXRC4prKo5y3l3AVsY2nE",
         authDomain: "mocigan-rready.firebaseapp.com",
@@ -72,6 +77,10 @@
         messagingSenderId: "490613256817",
         appId: "1:490613256817:web:10b8ee8ad0cf49ea0861d0",
         measurementId: "G-LG7JZ0NGHD"
+
+
+
+
     };
     const app = initializeApp(firebaseConfig);
     const analytics = getAnalytics(app);
@@ -86,7 +95,6 @@
         }
     });
 
-
     document.getElementById("signInBtn").addEventListener("click", async () => {
         const email = document.getElementById("signInEmail").value;
         const password = document.getElementById("signInPassword").value;
@@ -97,47 +105,71 @@
             alert("Signed in successfully");
             window.location = "/menuPage.html"
         } catch (error) {
-            console.error(error);
             alert(error.message);
         }
-        
+    
     });
+
 
     document.getElementById("signUpBtn").addEventListener("click", async () => {
         const email = document.getElementById("signUpEmail").value;
         const password = document.getElementById("signUpPassword").value;
+
+        // basic first checks
+        if (!email || !password) {
+            alert("Please fill in all fields");
+            return;
+        } else if (password.length < 6) {
+            alert("Password must be at least 6 characters");
+            return;
+        }
 
         try {
             const cred = await createUserWithEmailAndPassword(auth, email, password);
             const name = document.getElementById("signUpName").value;
             const state = document.getElementById("signUpState").value;
 
-        // All of this stuff is new for the user because they just signed up
+            // all of this stuff is new for the user because they just signed up
+            await setDoc(doc(db, "users", cred.user.uid), {
+                email: email,
+                name: name,
+                state: state,
 
-        await setDoc(doc(db, "users", cred.user.uid), {
-            email: email,
-            name: name,
-            state: state,
+                // format of [{firstName: kid1FirstName, lastName: kid1LastName, age: kid1Age}, ...] 
+                kidsIndexInfo: [],
+                // format of [{daytimeHours: kid1DaytimeHours, nighttimeHours: kid1NighttimeHours}, ...] 
+                // stored in seconds
+                kidsDriveTimeLogged: [],
+                // Driving logs format will be like this:
+                drivingLogs: [],
+                createdAt: new Date()
 
-            // Format of [{firstName: kid1FirstName, lastName: kid1LastName, age: kid1Age}, ...] 
-            kidsIndexInfo: [],
-            // Format of [{daytimeHours: kid1DaytimeHours, nighttimeHours: kid1NighttimeHours}, ...] 
-            kidsDriveTimeLogged: [],
-            // More info, empty for now
-            drivingLogs: [],
-            createdAt: new Date()
-
-        });
-        console.log("Signed up:", cred.user);
+            });
             alert("Account created!! Sign in with that info");
         } catch (error) {
             console.error(error);
-            alert(error.message);
+            
+            // Firebase errors and such
+            if (error.code === 'auth/email-already-in-use') {
+                alert("This email is already registered. Please sign in or use a different email.");
+            } else if (error.code === 'auth/invalid-email') {
+                alert("Please enter a valid email address.");
+            } else if (error.code === 'auth/weak-password') {
+                alert("Password is too weak. Please use a stronger password.");
+
+            } else {
+                alert(error.message);
+
+            }
         }
     });
+
+
 
 </script>   
 
 </body>
 </html>
 
+
+<!-- Odf j -->

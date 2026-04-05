@@ -1,6 +1,7 @@
 * {
     padding: 0px;
     margin: 0px;
+    font-family: "Outfit", sans-serif;
 }
 
 body {
@@ -8,4 +9,13 @@ body {
     height: 100vh;
 
     background-color: white;
+}
+
+input[type="text"] {
+    height: 30px;
+    padding: 5px;
+    box-sizing: border-box;
+    border-radius: 5%;
+    outline: none;
+    
 }

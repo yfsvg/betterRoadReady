@@ -7,21 +7,204 @@
 
     <link rel="stylesheet" href="main.css">
     <link rel="stylesheet" href="countingTimePage.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
 </head>
 <body>
 
-    <p>Currently tracking for:</p>
-    <h1 id="whoWeTrackinFor">Name!!</h1>
+    <div id="mainSegment">
+        <p>Currently tracking for:</p>
+        <h1 id="whoWeTrackinFor">Name!!</h1>
+
+        <h2 id="secondsCounter">0 seconds</h2>
+        <h2 id="minutesCounter">0 minutes</h2>
+
+        <p id="pausedOrNot" style="display: none;">Time paused</p>
+
+        <button onclick="pauseTime()">Pause time</button>
+        <button onclick="endLog()">End log</button>
+        
+    </div>
+
+    <section id="fillOutLogBg" style="transform: translateY(100%); transition: transform 0.5s, opacity 0.5s; opacity: 0;">
+        <div id="moreInfoLog">
+            <h2 id="driveTimeDisplayEnd">You've driven for </h2>
+
+            <h2>Miles driven: </h2>
+
+            <div>
+                <label for="timeOfDayDrive">Time of day driven</label>
+                <select id="timeOfDayDrive" name="timeOfDay">
+                    <option value="day">Day</option>
+                    <option value="night">Night</option>
+                </select>
+            </div>
+
+
+            <div>
+                <label for="typeOfRoadwayDriven">Type of roadway driven on</label>
+                <select id="typeOfRoadwayDriven" name="typeOfRoadway">
+
+                    <option value="highway">Highway</option>
+                    <option value="majorRoad">Major Road</option>
+                    <option value="localRoad">Local Road</option>
+                    <option value="ruralRoad">Rural Road</option>
+                    <option value="urbanRoad">Urban Road</option>
+                    <option value="parkingLot">Parking Lot</option>
+                </select>
+            </div>
+
+
+
+            <div>
+            
+                <label for="weatherConditionTypeDrivenIn">Weather condition type</label>
+                <select id="weatherConditionTypeDrivenIn" name="weatherConditionType">
+                    <option value="fair">Fair</option>
+                    <option value="rain">Rain</option>
+                    <option value="snow">Snow</option>
+                    <option value="hail">Hail</option>
+                    <option value="sleet">Sleet</option>
+                    <option value="freezingRain">Freezing Rain</option>
+                    <option value="fog">Fog</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="logNotes">Notes (Optional)</label>
+                <textarea id="logNotes" name="logNotes" placeholder="Add any details about the drive..." rows="4"></textarea>
+            </div>
+
+            <button onclick="bringMeBackFromLog()">Ok that is cool bring me back</button>
+
+        </div>
+
+
+
+    
+        
+    </section>
 
     <script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore-compat.js"></script>
-
+    
     <script>
-        const kidName = localStorage.getItem("selectedKidName");
+        let timerPaused = false;
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCHKhqm63ERxABXRC4prKo5y3l3AVsY2nE",
+            authDomain: "mocigan-rready.firebaseapp.com",
+            projectId: "mocigan-rready",
+            storageBucket: "mocigan-rready.firebasestorage.app",
+            messagingSenderId: "490613256817",
+            appId: "1:490613256817:web:10b8ee8ad0cf49ea0861d0",
+            measurementId: "G-LG7JZ0NGHD"
+        };
+
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        
+
+        let userData = null;
+        // page setup
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                try {
+                    const userDocRef = db.collection("users").doc(user.uid);
+                    const userDoc = await userDocRef.get();
+
+                    userData = userDoc.data();
+
+                } catch (error) {
+                    console.error("Error fetching user data:", error);
+                }
+            } else {
+                window.location = "/login.html";
+                alert("YOU ARE NOT SIGNED IN!!!");
+            }
+        });
+
+
+        const kidName = sessionStorage.getItem("selectedKidName");
+        const kidID = sessionStorage.getItem("selectedKidID");
         document.getElementById("whoWeTrackinFor").textContent = kidName;
+
+        let secondsElapsed = 0;
+        let timerInterval;
+
+        function updateDisplay() {
+            const minutes = Math.floor(secondsElapsed / 60);
+            const seconds = secondsElapsed % 60;
+            document.getElementById("minutesCounter").textContent = `${minutes} minutes`;
+            document.getElementById("secondsCounter").textContent = `${seconds} seconds`;
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                secondsElapsed++;
+                updateDisplay();
+            }, 1000);
+        }
+
+        startTimer();
+
+        function endLog() {
+            clearInterval(timerInterval);
+            document.getElementById("fillOutLogBg").style.transform = "translateY(0)";
+            document.getElementById("fillOutLogBg").style.opacity = 1;
+            
+            const minutes = Math.floor(secondsElapsed / 60);
+            const seconds = secondsElapsed % 60;
+            
+            document.getElementById("driveTimeDisplayEnd").textContent = `You've driven for ${minutes} minutes and ${seconds} seconds.`;
+
+            // userData.kidsDriveTimeLogged[kidID].daytimeHours
+        }
+
+        async function bringMeBackFromLog() {
+            const selectedTimeOfDay = document.getElementById("timeOfDayDrive").value;
+
+            if (selectedTimeOfDay === "day") {
+                userData.kidsDriveTimeLogged[kidID].daytimeHours += secondsElapsed;
+            } else {
+                userData.kidsDriveTimeLogged[kidID].nighttimeHours += secondsElapsed;
+            }
+
+            const user = auth.currentUser;
+            await db.collection("users").doc(user.uid).update({
+                kidsDriveTimeLogged: userData.kidsDriveTimeLogged
+            });
+
+            window.location = "/menuPage.html";
+
+
+        }
+
+        function pauseTime() {
+            if (timerPaused) {
+                startTimer()
+                document.getElementById("pausedOrNot").style.display = "none";
+            } else {
+                clearInterval(timerInterval);
+                document.getElementById("pausedOrNot").style.display = "block";
+            }
+            timerPaused = !timerPaused;
+
+        }
+
     </script>
 
-</body>
-</html>
 
+
+    
+
+</body>
+
+
+</html>
