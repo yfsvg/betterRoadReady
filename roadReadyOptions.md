@@ -21,4 +21,3 @@ Log infos:
     * Day
     * Night
 - Notes Textarea
-

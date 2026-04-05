@@ -64,3 +64,30 @@ input[type = "text"] {
     justify-content: space-between;
     background-color: red;
 }
+
+
+/* Driving logs area */
+
+#drivingLogsContainer {
+    width: 100%;
+    max-width: 720px;
+    margin-top: 10px;
+    padding: 0px;
+}
+
+#drivingLogsContainer h2 {
+    margin-bottom: 5px;
+}
+
+.logCard {
+    border: 1px solid rgba(128, 128, 128, 0.25);
+    border-radius: 16px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    background: white;
+}
+
+.logCard p {
+    margin: 6px 0;
+}
+

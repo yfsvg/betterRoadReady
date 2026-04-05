@@ -141,12 +141,14 @@
                 // stored in seconds
                 kidsDriveTimeLogged: [],
                 // Driving logs format will be like this:
+                // [{Driver: Kid, Duration: X, Miles: (No functionality for that yet, set to 0), Weather: Weather, Road type: Road Type, Extra notes: (If applicable) Notes}]
                 drivingLogs: [],
                 createdAt: new Date()
 
             });
             alert("Account created!! Sign in with that info");
         } catch (error) {
+
             console.error(error);
             
             // Firebase errors and such
@@ -162,14 +164,11 @@
 
             }
         }
+
+
     });
-
-
 
 </script>   
 
 </body>
 </html>
-
-
-<!-- Odf j -->

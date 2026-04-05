@@ -34,6 +34,11 @@
         <button onclick="deleteAccount()">Delete account</button>
         <button onclick="startDriving()" id="startDrivingButton">Start driving session (No kids tho can't do it)</button>
 
+        <div id="drivingLogsContainer">
+            <h2>Driving Logs</h2>
+            <div id="drivingLogsList">No logs yet.</div>
+        </div>
+
         <button onclick="logOut()">Log Out</button>
     </section>
 
@@ -100,6 +105,8 @@
                             document.getElementById("kidSelection").addEventListener("change", updateDriveTimeDisplay);
                             updateDriveTimeDisplay();
                         }
+
+                        populateDrivingLogs();
                         
                     } else {
                         console.log("User dont exist!");
@@ -146,11 +153,77 @@
         function updateDriveTimeDisplay() {
             const kidIndex = document.getElementById("kidSelection").value;
             if (kidIndex !== null && kidIndex !== "") {
-                const daytimeSeconds = userData.kidsDriveTimeLogged[kidIndex].daytimeHours || 0;
-                const nighttimeSeconds = userData.kidsDriveTimeLogged[kidIndex].nighttimeHours || 0;
+                const daytimeSeconds = (userData.kidsDriveTimeLogged && userData.kidsDriveTimeLogged[kidIndex] && userData.kidsDriveTimeLogged[kidIndex].daytimeHours) || 0;
+                const nighttimeSeconds = (userData.kidsDriveTimeLogged && userData.kidsDriveTimeLogged[kidIndex] && userData.kidsDriveTimeLogged[kidIndex].nighttimeHours) || 0;
                 document.getElementById("currentDriveTimeDaylight").textContent = `You currently have this many seconds of daytime drive time: ${daytimeSeconds}`;
                 document.getElementById("currentDriveTimeNighttime").textContent = `You currently have this many seconds of nighttime drive time: ${nighttimeSeconds}`;
             }
+            populateDrivingLogs();
+        }
+
+        function populateDrivingLogs() {
+            const logsList = document.getElementById("drivingLogsList");
+            const logs = Array.isArray(userData.drivingLogs) ? userData.drivingLogs : [];
+
+            if (logs.length === 0) {
+                logsList.innerHTML = "No logs yet.";
+                return
+            }
+
+            logsList.innerHTML = logs.map((log, index) => {
+                const notes = log["Extra notes"] ? log["Extra notes"] : "None";
+                return `
+                    <div class="logCard" id="drivingLog${index}">\n
+                        <p>${index}\n<strong>Driver:</strong> ${log.Driver}</p>\n<p><strong>Duration:</strong> ${log.Duration} seconds</p>\n<p><strong>Miles:</strong> ${log.Miles}</p>\n<p><strong>Weather:</strong> ${log.Weather}</p>\n<p><strong>Road type:</strong> ${log["Road type"]}</p>\n<p><strong>Time of day:</strong> ${log["Time of day"]}</p>\n<p><strong>Extra notes:</strong> ${notes}</p>\n<button onclick="deleteLog(${index})">Delete</button></div>
+                `;
+                
+            }).join("");
+        }
+
+        function deleteLog(index) {
+            const log = userData.drivingLogs[index];
+            const duration = log.Duration;
+            const timeOfDay = log["Time of day"];
+            const driverName = log.Driver;
+
+            // Find the kidID based on the driver name
+            let kidID = null;
+            for (let i = 0; i < userData.kidsIndexInfo.length; i++) {
+                const kidName = `${userData.kidsIndexInfo[i].firstName} ${userData.kidsIndexInfo[i].lastName}`;
+                if (kidName === driverName) {
+                    kidID = i;
+                    break;
+                }
+            }
+
+            if (kidID === null) {
+                alert("Could not find the kid for this log.");
+                return;
+            }
+
+            // Subtract the duration from the appropriate time total
+            if (timeOfDay === "day") {
+                userData.kidsDriveTimeLogged[kidID].daytimeHours -= duration;
+            } else {
+                userData.kidsDriveTimeLogged[kidID].nighttimeHours -= duration;
+            }
+
+            // Remove the log from the array
+            userData.drivingLogs.splice(index, 1);
+
+            // Update the database
+            const user = auth.currentUser;
+            db.collection("users").doc(user.uid).update({
+                kidsDriveTimeLogged: userData.kidsDriveTimeLogged,
+                drivingLogs: userData.drivingLogs
+            }).then(() => {
+                // Refresh the display
+                populateDrivingLogs();
+                updateDriveTimeDisplay();
+            }).catch((error) => {
+                console.error("Error updating database:", error);
+                alert("Error deleting log: " + error.message);
+            });
         }
 
         function logOut() {
@@ -211,8 +284,11 @@
                 console.error("Error creating new kid profile:", error)
                 alert("Error creating new kid profile: " + error.message)
             }
+
             
         }
     </script>
+
+    
 </body>
 </html>

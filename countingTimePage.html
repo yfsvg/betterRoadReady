@@ -70,6 +70,8 @@
                     <option value="freezingRain">Freezing Rain</option>
                     <option value="fog">Fog</option>
                     <option value="other">Other</option>
+
+                    
                 </select>
             </div>
 
@@ -169,21 +171,47 @@
 
         async function bringMeBackFromLog() {
             const selectedTimeOfDay = document.getElementById("timeOfDayDrive").value;
+            const selectedRoadType = document.getElementById("typeOfRoadwayDriven").value;
+            const selectedWeather = document.getElementById("weatherConditionTypeDrivenIn").value;
+            const notes = document.getElementById("logNotes").value.trim();
+            const user = auth.currentUser;
 
-            if (selectedTimeOfDay === "day") {
-                userData.kidsDriveTimeLogged[kidID].daytimeHours += secondsElapsed;
-            } else {
-                userData.kidsDriveTimeLogged[kidID].nighttimeHours += secondsElapsed;
+            if (!userData.drivingLogs) {
+                userData.drivingLogs = [];
             }
 
-            const user = auth.currentUser;
+            const durationSeconds = secondsElapsed;
+            const logEntry = {
+                Driver: sessionStorage.getItem("selectedKidName") || "Kid",
+                Duration: durationSeconds,
+                Miles: 0,
+                Weather: selectedWeather,
+                "Road type": selectedRoadType,
+                "Time of day": selectedTimeOfDay,
+                "Extra notes": notes || ""
+            };
+
+            userData.drivingLogs.push(logEntry);
+
+            if (!userData.kidsDriveTimeLogged) {
+                userData.kidsDriveTimeLogged = [];
+            }
+            if (!userData.kidsDriveTimeLogged[kidID]) {
+                userData.kidsDriveTimeLogged[kidID] = { daytimeHours: 0, nighttimeHours: 0 };
+            }
+
+            if (selectedTimeOfDay === "day") {
+                userData.kidsDriveTimeLogged[kidID].daytimeHours += durationSeconds;
+            } else {
+                userData.kidsDriveTimeLogged[kidID].nighttimeHours += durationSeconds;
+            }
+
             await db.collection("users").doc(user.uid).update({
-                kidsDriveTimeLogged: userData.kidsDriveTimeLogged
+                kidsDriveTimeLogged: userData.kidsDriveTimeLogged,
+                drivingLogs: userData.drivingLogs
             });
 
             window.location = "/menuPage.html";
-
-
         }
 
         function pauseTime() {
@@ -206,5 +234,12 @@
 
 </body>
 
-
 </html>
+
+
+<!-- 
+
+Gotta find some way to track GPS data to figure out distance that it takes
+Also more style changes and an actual login page that doesnt look like DOODOO...
+
+-->
