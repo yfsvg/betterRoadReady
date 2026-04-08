@@ -37,6 +37,9 @@
     <br>
     <input id="signUpState" type="text" placeholder="State">
     <br>
+    <p>Migrating from Roadready? Upload PDF of previous driving logs to not lose time (Optional, RoadReady export)</p>
+    <input type="file" id="">
+    <br>
     <button id="signUpBtn">Sign Up</button>
 
 </div>
@@ -141,7 +144,7 @@
                 // stored in seconds
                 kidsDriveTimeLogged: [],
                 // Driving logs format will be like this:
-                // [{Driver: Kid, Duration: X, Miles: (No functionality for that yet, set to 0), Weather: Weather, Road type: Road Type, Extra notes: (If applicable) Notes}]
+                // [{Driver: Kid, StartTime: time of start, Duration: X, Miles: (No functionality for that yet, set to 0), Weather: Weather, Road type: Road Type, Extra notes: (If applicable) Notes}]
                 drivingLogs: [],
                 createdAt: new Date()
 
@@ -169,6 +172,7 @@
     });
 
 </script>   
+
 
 </body>
 </html>
