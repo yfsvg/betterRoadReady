@@ -114,7 +114,7 @@
         
 
         let userData = null;
-        // page setup
+        // page setupnerning is transforming industri ejfsj sdf.jsdoif j sod ifjsdo fjo isdfjsoi fjsi fTfhfe. qujic
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 try {
@@ -182,8 +182,11 @@
             }
 
             const durationSeconds = secondsElapsed;
+            const today = new Date();
+
             const logEntry = {
                 Driver: sessionStorage.getItem("selectedKidName") || "Kid",
+                dateOfDrive: today.toLocaleDateString(),
                 Duration: durationSeconds,
                 Miles: 0,
                 Weather: selectedWeather,

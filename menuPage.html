@@ -10,7 +10,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
+
+
 <body>
     <section id="mainBody">
         <h1 id="welcomeMessage">Welcome back, </h1>
@@ -34,10 +38,15 @@
         <button onclick="deleteAccount()">Delete account</button>
         <button onclick="startDriving()" id="startDrivingButton">Start driving session (No kids tho can't do it)</button>
 
+        <p>Migrating from Roadready? Upload PDF of previous driving logs to not lose time (Optional, RoadReady export)</p>
+        <input type="file" id="roadReadyImport">
+
         <div id="drivingLogsContainer">
             <h2>Driving Logs</h2>
             <div id="drivingLogsList">No logs yet.</div>
         </div>
+
+
 
         <button onclick="logOut()">Log Out</button>
     </section>
@@ -288,7 +297,106 @@
             }
 
         }
+    
+    
+        document.getElementById("roadReadyImport").addEventListener("change", async function() {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+            
+            const file = document.getElementById('roadReadyImport').files[0];
+            if (!file) return;
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+            let fullText = '';
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i)
+                const textContent = await page.getTextContent()
+                const pageText = textContent.items.map(item => item.str).join(' ')
+                fullText += pageText + '\n'
+            }
+            console.log("received")
+            
+            // Splitting dates
+            const dateRegex = /(\d{2}\/\d{2}\/\d{4})/g;
+            const parts = fullText.split(dateRegex);
+            
+            const logs = [];
+            
+            // Process pairs: [textBeforeDate, date, textAfterDate, nextDate, ...]
+            for (let i = 1; i < parts.length; i += 2) {
+                const date = parts[i];
+                const logText = parts[i + 1] || ''
+                
+                const sections = logText.split("   ").map(s => s.trim()).filter(s => s)
+                
+                let dayNight = '';
+                const cleanedSections = sections.filter(section => {
+                    if (section.match(/^(Day|Night)$/)) {
+                        dayNight = section;
+                        return false;
+                    }
+                    return !section.match(/^(Date|Notes|Time|Duration|Weather|Road Type|Day\/Night)$/) && 
+                        !section.includes("Notes");
+                });
+                
+                logs.push({
+                    dayNight: dayNight,
+                    date: date,
+                    data: cleanedSections
+                });
+            }
+            
+        const selectedKidIndex = document.getElementById("kidSelection").value;
+        if (selectedKidIndex === "" || selectedKidIndex === null) {
+            alert("Please select a kid to import logs for.");
+            return;
+        }
+        const kidName = `${userData.kidsIndexInfo[selectedKidIndex].firstName} ${userData.kidsIndexInfo[selectedKidIndex].lastName}`;
+        
+        try {
+            for (const log of logs) {
+                const [startTime, durationStr, weather, roadType, notes] = log.data;
+                const duration = parseInt(durationStr);
+                if (isNaN(duration)) {
+                    console.warn("Invalid duration:", durationStr);
+                    continue;
+                }
+                const newLog = {
+                    Driver: kidName,
+                    dateOfDrive: log.date,
+                    StartTime: startTime,
+                    Duration: duration,
+                    Miles: 0,
+                    Weather: weather,
+                    "Road type": roadType,
+                    "Time of day": log.dayNight.toLowerCase() === "day" ? "day" : "night",
+                    "Extra notes": notes || "None"
+                };
+                userData.drivingLogs.push(newLog);
+                if (log.dayNight.toLowerCase() === "day") {
+                    userData.kidsDriveTimeLogged[selectedKidIndex].daytimeHours += duration;
+                } else {
+                    userData.kidsDriveTimeLogged[selectedKidIndex].nighttimeHours += duration;
+                }
+            }
+            // Update database
+            const user = auth.currentUser;
+            await db.collection("users").doc(user.uid).update({
+                drivingLogs: userData.drivingLogs,
+                kidsDriveTimeLogged: userData.kidsDriveTimeLogged
+            });
+            // Refresh display
+            populateDrivingLogs();
+            updateDriveTimeDisplay();
+            alert("Logs imported successfully!");
+        } catch (error) {
+            console.error("Error importing logs:", error);
+            alert("Error importing logs: " + error.message);
+        }
+    });
+
+    
     </script>
+
 
     
 </body>

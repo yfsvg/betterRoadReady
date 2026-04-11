@@ -12,6 +12,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 <body>
 
@@ -36,9 +38,6 @@
     <input id="signUpName" type="text" placeholder="Full Name">
     <br>
     <input id="signUpState" type="text" placeholder="State">
-    <br>
-    <p>Migrating from Roadready? Upload PDF of previous driving logs to not lose time (Optional, RoadReady export)</p>
-    <input type="file" id="">
     <br>
     <button id="signUpBtn">Sign Up</button>
 
@@ -144,7 +143,7 @@
                 // stored in seconds
                 kidsDriveTimeLogged: [],
                 // Driving logs format will be like this:
-                // [{Driver: Kid, StartTime: time of start, Duration: X, Miles: (No functionality for that yet, set to 0), Weather: Weather, Road type: Road Type, Extra notes: (If applicable) Notes}]
+                // [{Driver: Kid, dateOfDrive: date, StartTime: time of start, Duration: X, Miles: (No functionality for that yet, set to 0), Weather: Weather, Road type: Road Type, Extra notes: (If applicable) Notes}]
                 drivingLogs: [],
                 createdAt: new Date()
 
@@ -171,7 +170,9 @@
 
     });
 
-</script>   
+</script>  
+
+
 
 
 </body>
