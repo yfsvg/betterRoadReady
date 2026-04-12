@@ -23,9 +23,10 @@ Log infos:
 - Notes Textarea
 
 
+# Devlog 5
 
-# Devlog 4
+Begun working on the design process for the app! I've identified a style that I like and I'm probably going to keep this until I find something more appealing or professional. I took some heavy inspiration from RoadReady Ohio and other apps, but I will be sure to make it have its own identity eventually. It took quite some time for me to get something that I liked, most of my previous attempts felt too unprofessional but I'll probably still make it more serious later.
 
-Pretty big devlog, the main thing that I've been working on is the migration function from RoadReady to this app, in which you can upload a file and it'll parse it into driving logs for you. It utilizes a regex and then also string splitting to identify logs inside a PDF, before then populating the entire drive log. Understanding how regexs work and how to get it to work consistently across formats was quite difficult, but I do think I learned a lot from it.
+After that, I've begun to implement this design in the actual HTML (Just the Login bit), as well as adding little page animations that I hopefully won't regret when I try and migrate this project to React Native. 
 
-It took quite a lot of iterations to get to this point, for example just trying to iterate through each character to find patterns or potentially using an AI api to look through the parsed text to try and find it, but I think that I'm happy with what has come out. Obviously there's a lot of discrepencies and the app still looks like buns, but hopefully that'll change soon!
+Speaking of React Native, I'm also gonna be starting to research how I'm gonna migrate over and how to make basic projects in React Native. I think that after fixing up some of the issues with the driving log migration features, I'll start building in React Native very soon!

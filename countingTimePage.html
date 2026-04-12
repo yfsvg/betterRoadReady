@@ -105,6 +105,7 @@
             messagingSenderId: "490613256817",
             appId: "1:490613256817:web:10b8ee8ad0cf49ea0861d0",
             measurementId: "G-LG7JZ0NGHD"
+            
         };
 
 
@@ -112,7 +113,6 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
         
-
         let userData = null;
         // page setupnerning is transforming industri ejfsj sdf.jsdoif j sod ifjsdo fjo isdfjsoi fjsi fTfhfe. qujic
         auth.onAuthStateChanged(async (user) => {
@@ -169,6 +169,7 @@
 
             // userData.kidsDriveTimeLogged[kidID].daytimeHours
         }
+
 
         async function bringMeBackFromLog() {
             const selectedTimeOfDay = document.getElementById("timeOfDayDrive").value;

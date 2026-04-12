@@ -20,8 +20,8 @@
         <h1 id="welcomeMessage">Welcome back, </h1>
         <p id="stateMessage">Your state is </p>
 
-        <p id="currentDriveTimeDaylight">You currently have this many seconds of drive time in daytime: </p>
-        <p id="currentDriveTimeNighttime">You currently have this many seconds of drive time in nighttime: </p>
+        <p id="currentDriveTimeDaylight">You currently have this many minutes of drive time in daytime: </p>
+        <p id="currentDriveTimeNighttime">You currently have this many minutes of drive time in nighttime: </p>
 
         <select name="" id="kidSelection">
             <!-- Populated later -->
@@ -164,10 +164,34 @@
         function updateDriveTimeDisplay() {
             const kidIndex = document.getElementById("kidSelection").value;
             if (kidIndex !== null && kidIndex !== "") {
+                /*
                 const daytimeSeconds = (userData.kidsDriveTimeLogged && userData.kidsDriveTimeLogged[kidIndex] && userData.kidsDriveTimeLogged[kidIndex].daytimeHours) || 0;
                 const nighttimeSeconds = (userData.kidsDriveTimeLogged && userData.kidsDriveTimeLogged[kidIndex] && userData.kidsDriveTimeLogged[kidIndex].nighttimeHours) || 0;
-                document.getElementById("currentDriveTimeDaylight").textContent = `You currently have this many seconds of daytime drive time: ${daytimeSeconds}`;
-                document.getElementById("currentDriveTimeNighttime").textContent = `You currently have this many seconds of nighttime drive time: ${nighttimeSeconds}`;
+                */
+                let daytimeMinutes = 0;
+                let nightTimeMinutes = 0;
+                for (let i = 0; i < userData.drivingLogs.length; i++) {
+                    const wigie = userData.drivingLogs[i].Duration.trim().split(" ");
+                    const thisLogTimeOfDay = userData.drivingLogs[i].TimeOfDay || userData.drivingLogs[i]["Time of day"];
+                    if (wigie.length == 2) {
+                        if (thisLogTimeOfDay == "day") {
+                            daytimeMinutes += parseInt(wigie[0]);
+                        } else {
+                            nightTimeMinutes += parseInt(wigie[0]);
+                        }
+                    } else {
+                        if (thisLogTimeOfDay == "day") {
+                            daytimeMinutes += parseInt(wigie[0]) * 60;
+                            daytimeMinutes += parseInt(wigie[2]);
+                        } else {
+                            nightTimeMinutes += parseInt(wigie[0]) * 60;
+                            nightTimeMinutes += parseInt(wigie[2]);
+                        }
+
+                    }
+                }
+                document.getElementById("currentDriveTimeDaylight").textContent = `You currently have this many minutes of daytime drive time: ${daytimeMinutes}`;
+                document.getElementById("currentDriveTimeNighttime").textContent = `You currently have this many minutes of nighttime drive time: ${nightTimeMinutes}`;
             }
             populateDrivingLogs();
         }
@@ -182,10 +206,12 @@
             }
 
             logsList.innerHTML = logs.map((log, index) => {
-                const notes = log["Extra notes"] ? log["Extra notes"] : "None";
+                const notes = log.ExtraNotes ? log.ExtraNotes : "None";
+                const roadType = log.RoadType || log["Road type"] || "Unknown";
+                const timeOfDayDisplay = log.TimeOfDay || log["Time of day"] || "Unknown";
                 return `
                     <div class="logCard" id="drivingLog${index}">\n
-                        <p>${index}\n<strong>Driver:</strong> ${log.Driver}</p>\n<p><strong>Duration:</strong> ${log.Duration} seconds</p>\n<p><strong>Miles:</strong> ${log.Miles}</p>\n<p><strong>Weather:</strong> ${log.Weather}</p>\n<p><strong>Road type:</strong> ${log["Road type"]}</p>\n<p><strong>Time of day:</strong> ${log["Time of day"]}</p>\n<p><strong>Extra notes:</strong> ${notes}</p>\n<button onclick="deleteLog(${index})">Delete</button></div>
+                        <p>${index}\n<strong>Driver:</strong> ${log.Driver}</p>\n<p><strong>Duration:</strong> ${log.Duration}</p>\n<p><strong>Start time: </strong> ${log.StartTime}</p>\n<p><strong>Weather:</strong> ${log.Weather}</p>\n<p><strong>Road type:</strong> ${roadType}</p>\n<p><strong>Time of day:</strong> ${timeOfDayDisplay}</p>\n<p><strong>Extra notes:</strong> ${notes}</p>\n<button onclick="deleteLog(${index})">Delete</button></div>
                 `;
                 
             }).join("");
@@ -194,10 +220,9 @@
         function deleteLog(index) {
             const log = userData.drivingLogs[index];
             const duration = log.Duration;
-            const timeOfDay = log["Time of day"];
+            const timeOfDay = log.TimeOfDay || log["Time of day"];
             const driverName = log.Driver;
 
-            // Find the kidID based on the driver name
             let kidID = null;
             for (let i = 0; i < userData.kidsIndexInfo.length; i++) {
                 const kidName = `${userData.kidsIndexInfo[i].firstName} ${userData.kidsIndexInfo[i].lastName}`;
@@ -219,10 +244,9 @@
                 userData.kidsDriveTimeLogged[kidID].nighttimeHours -= duration;
             }
 
-            // Remove the log from the array
             userData.drivingLogs.splice(index, 1);
 
-            // Update the database
+
             const user = auth.currentUser;
             db.collection("users").doc(user.uid).update({
                 kidsDriveTimeLogged: userData.kidsDriveTimeLogged,
@@ -320,8 +344,13 @@
             const parts = fullText.split(dateRegex);
             
             const logs = [];
+
+            /*
+            fullText = fullText.slice(fullText.trim().indexOf("Day Total Driving Time:"));
+            */
+            console.log(fullText)
             
-            // Process pairs: [textBeforeDate, date, textAfterDate, nextDate, ...]
+            
             for (let i = 1; i < parts.length; i += 2) {
                 const date = parts[i];
                 const logText = parts[i + 1] || ''
@@ -353,13 +382,18 @@
         const kidName = `${userData.kidsIndexInfo[selectedKidIndex].firstName} ${userData.kidsIndexInfo[selectedKidIndex].lastName}`;
         
         try {
+
             for (const log of logs) {
+
                 const [startTime, durationStr, weather, roadType, notes] = log.data;
+                /*
                 const duration = parseInt(durationStr);
                 if (isNaN(duration)) {
                     console.warn("Invalid duration:", durationStr);
                     continue;
                 }
+                */
+                const duration = durationStr;
                 const newLog = {
                     Driver: kidName,
                     dateOfDrive: log.date,
@@ -367,18 +401,20 @@
                     Duration: duration,
                     Miles: 0,
                     Weather: weather,
-                    "Road type": roadType,
-                    "Time of day": log.dayNight.toLowerCase() === "day" ? "day" : "night",
-                    "Extra notes": notes || "None"
+                    RoadType: roadType,
+                    TimeOfDay: log.dayNight.toLowerCase() === "day" ? "day" : "night",
+                    ExtraNotes: notes || "None"
                 };
-                userData.drivingLogs.push(newLog);
+                if (newLog.Duration != "0 Mins") {
+                    userData.drivingLogs.push(newLog);
+                }
                 if (log.dayNight.toLowerCase() === "day") {
                     userData.kidsDriveTimeLogged[selectedKidIndex].daytimeHours += duration;
                 } else {
                     userData.kidsDriveTimeLogged[selectedKidIndex].nighttimeHours += duration;
                 }
             }
-            // Update database
+            
             const user = auth.currentUser;
             await db.collection("users").doc(user.uid).update({
                 drivingLogs: userData.drivingLogs,
@@ -391,6 +427,7 @@
         } catch (error) {
             console.error("Error importing logs:", error);
             alert("Error importing logs: " + error.message);
+            
         }
     });
 
@@ -401,3 +438,4 @@
     
 </body>
 </html>
+
