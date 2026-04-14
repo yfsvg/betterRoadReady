@@ -23,10 +23,8 @@ Log infos:
 - Notes Textarea
 
 
-# Devlog 5
+# Devlog 6
 
-Begun working on the design process for the app! I've identified a style that I like and I'm probably going to keep this until I find something more appealing or professional. I took some heavy inspiration from RoadReady Ohio and other apps, but I will be sure to make it have its own identity eventually. It took quite some time for me to get something that I liked, most of my previous attempts felt too unprofessional but I'll probably still make it more serious later.
+Kind of a mixed day today. First 45-60 minutes of this devlog were spent fixing issues regarding the uploading migration feature, which had some mismatches and utilized the unused miles feature. You can see in the video now that the total time added up is now correct, as in the previous devlog it just concatenated all of the strings together as one. Also fixed some parsing issues with the road type and standardized the data so its easier for me to work with later.
 
-After that, I've begun to implement this design in the actual HTML (Just the Login bit), as well as adding little page animations that I hopefully won't regret when I try and migrate this project to React Native. 
-
-Speaking of React Native, I'm also gonna be starting to research how I'm gonna migrate over and how to make basic projects in React Native. I think that after fixing up some of the issues with the driving log migration features, I'll start building in React Native very soon!
+For the rest of the period, I decided to get started with React Native! After a short tutorial and testing out for a bit I've started to work on the basic design and test it on an IOS simulator. The learning curve is a little strange since everything is familiar but also so different in execution, but I kind of replicated the login page that I wanted? I began to implement the firebase dataset inside this and I'm planning on fully implementing that later!

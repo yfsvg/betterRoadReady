@@ -205,16 +205,29 @@
                 return
             }
 
+            // userData.kidsIndexInfo[selectedKidIndex].firstName
+            const selectedKidIndex = document.getElementById("kidSelection").value;
+
             logsList.innerHTML = logs.map((log, index) => {
                 const notes = log.ExtraNotes ? log.ExtraNotes : "None";
                 const roadType = log.RoadType || log["Road type"] || "Unknown";
                 const timeOfDayDisplay = log.TimeOfDay || log["Time of day"] || "Unknown";
-                return `
-                    <div class="logCard" id="drivingLog${index}">\n
-                        <p>${index}\n<strong>Driver:</strong> ${log.Driver}</p>\n<p><strong>Duration:</strong> ${log.Duration}</p>\n<p><strong>Start time: </strong> ${log.StartTime}</p>\n<p><strong>Weather:</strong> ${log.Weather}</p>\n<p><strong>Road type:</strong> ${roadType}</p>\n<p><strong>Time of day:</strong> ${timeOfDayDisplay}</p>\n<p><strong>Extra notes:</strong> ${notes}</p>\n<button onclick="deleteLog(${index})">Delete</button></div>
-                `;
-                
+                if (log.Driver == `${userData.kidsIndexInfo[selectedKidIndex].firstName} ${userData.kidsIndexInfo[selectedKidIndex].lastName}`) {
+                    return `
+                        <div class="logCard" id="drivingLog${index}">\n
+                            <p>${index}\n<strong>Driver:</strong> ${log.Driver}</p>\n<p><strong>Duration:</strong> ${log.Duration}</p>\n<p><strong>Start time: </strong> ${log.StartTime}</p>\n<p><strong>Weather:</strong> ${log.Weather}</p>\n<p><strong>Road type:</strong> ${roadType}</p>\n<p><strong>Time of day:</strong> ${timeOfDayDisplay}</p>\n<p><strong>Extra notes:</strong> ${notes}</p>\n<button onclick="deleteLog(${index})">Delete</button></div>
+                    `;
+                } else {
+                    return "";
+                }
             }).join("");
+
+
+
+            if (logsList.innerHTML.trim().length === 0) {
+                logsList.innerHTML = "No logs yet.";
+                return
+            }
         }
 
         function deleteLog(index) {
