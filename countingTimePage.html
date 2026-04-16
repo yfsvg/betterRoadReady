@@ -167,7 +167,6 @@
             
             document.getElementById("driveTimeDisplayEnd").textContent = `You've driven for ${minutes} minutes and ${seconds} seconds.`;
 
-            // userData.kidsDriveTimeLogged[kidID].daytimeHours
         }
 
 
@@ -198,21 +197,7 @@
 
             userData.drivingLogs.push(logEntry);
 
-            if (!userData.kidsDriveTimeLogged) {
-                userData.kidsDriveTimeLogged = [];
-            }
-            if (!userData.kidsDriveTimeLogged[kidID]) {
-                userData.kidsDriveTimeLogged[kidID] = { daytimeHours: 0, nighttimeHours: 0 };
-            }
-
-            if (selectedTimeOfDay === "day") {
-                userData.kidsDriveTimeLogged[kidID].daytimeHours += durationSeconds;
-            } else {
-                userData.kidsDriveTimeLogged[kidID].nighttimeHours += durationSeconds;
-            }
-
             await db.collection("users").doc(user.uid).update({
-                kidsDriveTimeLogged: userData.kidsDriveTimeLogged,
                 drivingLogs: userData.drivingLogs
             });
 

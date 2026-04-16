@@ -14,7 +14,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 
-
 <body>
     <section id="mainBody">
         <h1 id="welcomeMessage">Welcome back, </h1>
@@ -250,19 +249,11 @@
                 return;
             }
 
-            // Subtract the duration from the appropriate time total
-            if (timeOfDay === "day") {
-                userData.kidsDriveTimeLogged[kidID].daytimeHours -= duration;
-            } else {
-                userData.kidsDriveTimeLogged[kidID].nighttimeHours -= duration;
-            }
-
             userData.drivingLogs.splice(index, 1);
 
 
             const user = auth.currentUser;
             db.collection("users").doc(user.uid).update({
-                kidsDriveTimeLogged: userData.kidsDriveTimeLogged,
                 drivingLogs: userData.drivingLogs
             }).then(() => {
                 // Refresh the display
@@ -308,13 +299,11 @@
             try {
 
                 userData.kidsIndexInfo.push({firstName, lastName, age: parseInt(age)});
-                userData.kidsDriveTimeLogged.push({daytimeHours: 0, nighttimeHours: 0});
 
                 const user = auth.currentUser;
 
                 await db.collection("users").doc(user.uid).update({
                     kidsIndexInfo: userData.kidsIndexInfo,
-                    kidsDriveTimeLogged: userData.kidsDriveTimeLogged
                 });
 
                 const newIndex = userData.kidsIndexInfo.length - 1;
@@ -421,17 +410,11 @@
                 if (newLog.Duration != "0 Mins") {
                     userData.drivingLogs.push(newLog);
                 }
-                if (log.dayNight.toLowerCase() === "day") {
-                    userData.kidsDriveTimeLogged[selectedKidIndex].daytimeHours += duration;
-                } else {
-                    userData.kidsDriveTimeLogged[selectedKidIndex].nighttimeHours += duration;
-                }
             }
             
             const user = auth.currentUser;
             await db.collection("users").doc(user.uid).update({
                 drivingLogs: userData.drivingLogs,
-                kidsDriveTimeLogged: userData.kidsDriveTimeLogged
             });
             // Refresh display
             populateDrivingLogs();
